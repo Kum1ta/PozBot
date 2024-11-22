@@ -3,6 +3,7 @@ const { REST } = require('@discordjs/rest');
 const { jsonCommands, funcCommands } = require('./configCommands.js');
 const { Routes } = require('discord-api-types/v9');
 const credentials = require("./credentials.json");
+const { sendTweet } = require("./sendTweet");
 
 const client = new Client({ intents: [
 	GatewayIntentBits.Guilds,
@@ -54,7 +55,8 @@ client.on("ready", async () => {
 
 		await sleep(nextBreakDate - currentDate);
 		channel.send("It's time to take a break ||@everyone||!");
-		await sleep(10000);
+		
+		await sendTweet("It's Time to take a Break!"); // <-- This line is new :)
 	}
 });
 
@@ -72,4 +74,3 @@ client.on("interactionCreate", (interaction) => {
 })
 
 client.login(credentials.token)
-
