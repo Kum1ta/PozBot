@@ -1,9 +1,9 @@
-const { Client, GatewayIntentBits } = require("discord.js");
-const { REST } = require('@discordjs/rest');
 const { jsonCommands, funcCommands } = require('./configCommands.js');
+const { Client, GatewayIntentBits } = require("discord.js");
 const { Routes } = require('discord-api-types/v9');
 const credentials = require("./credentials.json");
-const { sendTweet } = require("./sendTweet");
+const { sendTweet } = require("./sendTweet.js");
+const { REST } = require('@discordjs/rest');
 
 const client = new Client({ intents: [
 	GatewayIntentBits.Guilds,
@@ -43,20 +43,20 @@ client.on("ready", async () => {
 	channel.send("I'm ready!");
 	while (true)
 	{
-		let currentDate = new Date();
-		let nextBreakDate = new Date();
+		let currentDate		= new Date();
+		let nextBreakDate	= new Date();
 		nextBreakDate.setHours(breakTime.hour);
 		nextBreakDate.setMinutes(breakTime.minute);
 		nextBreakDate.setSeconds(breakTime.second);
-		if (nextBreakDate < currentDate) {
+		if (nextBreakDate < currentDate)
 			nextBreakDate.setDate(nextBreakDate.getDate() + 1);
-		}
 		console.log(`Sleeping ${nextBreakDate - currentDate}ms for next break`);
 
 		await sleep(nextBreakDate - currentDate);
+		await sleep(1000);
+
 		channel.send("It's time to take a break ||@everyone||!");
-		
-		await sendTweet("It's Time to take a Break!"); // <-- This line is new :)
+		await sendTweet("It's Time to take a Break!");
 	}
 });
 
