@@ -17,4 +17,4 @@ async function sendTweet(message) {
 	}
 }
 
-export { sendTweet };
+module.exports = sendTweet;
