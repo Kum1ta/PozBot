@@ -1,5 +1,16 @@
 const { SlashCommandBuilder } = require('discord.js');
+const fs = require('fs');
+
+let config = {};
 let breakTime = {hour: 15, minute: 32, second: 42};
+
+try {
+	let configFile = fs.readFileSync('config.json', 'utf8', "r");
+	config = JSON.parse(configFile);
+} catch (e) {}
+
+if (config.breakTime && config.breakTime.hour && config.breakTime.minute && config.breakTime.second)
+	breakTime = config.breakTime;
 
 
 let	jsonCommands = {
@@ -18,11 +29,14 @@ let	jsonCommands = {
 }
 
 let funcCommands = {
-	async pause(interaction)
+	async pause(interaction, client)
 	{
-		await interaction.reply(`The next break will be at ${breakTime.hour}:${breakTime.minute}:${breakTime.second}`);
+		let hour = ("0" + breakTime.hour).slice(-2)
+		let minute = ("0" + breakTime.minute).slice(-2)
+		let second = ("0" + breakTime.second).slice(-2)
+		await interaction.reply(`The next break will be at ${hour}:${minute}:${second}`);
 	},
-	async change_time(interaction)
+	async change_time(interaction, client)
 	{
 		const hour = interaction.options.getInteger('hour');
 		const minute = interaction.options.getInteger('minute');
@@ -30,10 +44,20 @@ let funcCommands = {
 
 		breakTime.hour = hour
 		breakTime.minute = minute
-		breakTime.second = second		
-		await interaction.reply(`The next break will be at ${breakTime.hour}:${breakTime.minute}:${breakTime.second}`);
+		breakTime.second = second
+
+		config.breakTime = breakTime;
+		try {
+			fs.writeFileSync('config.json', JSON.stringify(config), "utf8", "+w");
+		} catch (e) {}
+
+		let res_hour = ("0" + breakTime.hour).slice(-2)
+		let res_minute = ("0" + breakTime.minute).slice(-2)
+		let res_second = ("0" + breakTime.second).slice(-2)
+		await interaction.reply(`The next break will be at ${res_hour}:${res_minute}:${res_second}`);
+		client.setPauseTimeout();
 	},
-	async ping(interaction)
+	async ping(interaction, client)
 	{
 		const time = Date.now();
 		const messageTime = interaction.createdTimestamp;

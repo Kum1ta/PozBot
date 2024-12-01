@@ -2,7 +2,7 @@ const { jsonCommands, funcCommands, breakTime } = require('./configCommands.js')
 const { Client, GatewayIntentBits } = require("discord.js");
 const { Routes } = require('discord-api-types/v9');
 const credentials = require("./credentials.json");
-const { sendTweet } = require("./sendTweet.js");
+// const { sendTweet } = require("./sendTweet.js");
 const { REST } = require('@discordjs/rest');
 
 const client = new Client({ intents: [
@@ -35,27 +35,40 @@ const rest = new REST({ version: '9' }).setToken(credentials.token);
 	}
 })();
 
-client.on("ready", async () => {
-	const guild = await client.guilds.fetch(credentials.guildId);
-	const channel = await guild.channels.fetch(credentials.channelId);
+client.pauseTimeout = null;
+client.pauseMsgGuild = null;
+client.pauseMsgChannel = null;
+client.setPauseTimeout = function() {
+	// clear last timeout
+	if (this.pauseTimeout)
+		clearTimeout(this.pauseTimeout)
+	this.pauseTimeout = null;
 
-	channel.send("I'm ready!");
-	while (true)
-	{
-		let nextBreakDate;
-		do
-		{
-			nextBreakDate = new Date();
-			nextBreakDate.setHours(breakTime.hour);
-			nextBreakDate.setMinutes(breakTime.minute);
-			nextBreakDate.setSeconds(breakTime.second);
-			await sleep(500);
-		} while (Math.abs((new Date()) - nextBreakDate) >= 1000);
-		await sleep(10000);
+	// set next break date
+	let currentDate = new Date();
+	let nextBreakDate = new Date();
+	nextBreakDate.setHours(breakTime.hour);
+	nextBreakDate.setMinutes(breakTime.minute);
+	nextBreakDate.setSeconds(breakTime.second);
+	if (nextBreakDate <= currentDate)
+		nextBreakDate.setDate(currentDate.getDate() + 1);
 
-		channel.send("It's time to take a break ||@everyone||!");
+	// timeout until break
+	console.log((nextBreakDate - currentDate) + "ms until next break")
+	this.pauseTimeout = setTimeout(() => {
+		client.pauseMsgChannel.send("It's time to take a break ||@everyone||!")
 		// await sendTweet("It's Time to take a Break!");
-	}
+		this.pauseTimeout = null;
+		this.setPauseTimeout();
+	}, nextBreakDate - currentDate + 1)
+}
+
+client.on("ready", async () => {
+
+	client.pauseMsgGuild = await client.guilds.fetch(credentials.guildId);
+	client.pauseMsgChannel = await client.pauseMsgGuild.channels.fetch(credentials.channelId);
+	client.setPauseTimeout();
+	client.pauseMsgChannel.send("I'm ready!");
 });
 
 client.on("messageCreate", async (message) => {
@@ -67,7 +80,7 @@ client.on("interactionCreate", (interaction) => {
 	if (interaction.isCommand())
 	{
 		if (funcCommands[interaction.commandName])
-			funcCommands[interaction.commandName](interaction);
+			funcCommands[interaction.commandName](interaction, client);
 	}
 })
 
