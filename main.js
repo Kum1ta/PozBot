@@ -4,6 +4,7 @@ const { Routes } = require('discord-api-types/v9');
 const credentials = require("./credentials.json");
 // const { sendTweet } = require("./sendTweet.js");
 const { REST } = require('@discordjs/rest');
+const {isthanks} = require('./goodwords.js');
 
 const client = new Client({ intents: [
 	GatewayIntentBits.Guilds,
@@ -74,6 +75,10 @@ client.on("ready", async () => {
 client.on("messageCreate", async (message) => {
 	if (message.author.bot)
 		return ;
+	if (message.content.includes("<@1309512222694838312>") && isthanks(message))
+		{
+		message.reply("You're welcome " + message.author.displayName + " !  :grinning:");
+	}
 });
 
 client.on("interactionCreate", (interaction) => {
